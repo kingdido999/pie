@@ -24,12 +24,12 @@ fn main() {
     tera.autoescape_on(vec![]);
 
     let mut post_list = vec![];
-    let entries = fs::read_dir("posts").expect("Unable to read posts.");
+    let entries = fs::read_dir("posts").unwrap();
 
     // Generate posts
     for entry in entries {
         let path = entry.unwrap().path();
-        let mut file = File::open(&path).expect("Unable to open file.");
+        let mut file = File::open(&path).unwrap();
         let buf_reader = BufReader::new(&file);
         let title = extract_title_string(buf_reader);
 
@@ -47,10 +47,8 @@ fn main() {
         let rendered_html = tera.render("layouts/post.html", &context).unwrap();
 
         let output_path = format!("dist/posts/{}", post.file_name);
-        let mut write_buf = File::create(&output_path).expect("Unable to create file.");
-        write_buf
-            .write(rendered_html.as_bytes())
-            .expect("Unable to write file.");
+        let mut write_buf = File::create(&output_path).unwrap();
+        write_buf.write(rendered_html.as_bytes()).unwrap();
         post_list.push(post);
     }
 
@@ -58,16 +56,13 @@ fn main() {
     let mut context = Context::new();
     context.insert("post_list", &post_list);
     let rendered_html = tera.render("index.html", &context).unwrap();
-    let mut write_buf = File::create("dist/index.html").expect("Unable to create file.");
-    write_buf
-        .write(rendered_html.as_bytes())
-        .expect("Unable to write file.");
+    let mut write_buf = File::create("dist/index.html").unwrap();
+    write_buf.write(rendered_html.as_bytes()).unwrap();
 }
 
 fn convert_markdown_to_html(mut file: File) -> String {
     let mut md_buf = String::new();
-    file.read_to_string(&mut md_buf)
-        .expect("Unable to read file");
+    file.read_to_string(&mut md_buf).unwrap();
 
     let parser = Parser::new(&md_buf);
     let mut html_buf = String::new();
@@ -77,7 +72,7 @@ fn convert_markdown_to_html(mut file: File) -> String {
 
 fn extract_title_string<R: BufRead>(mut rdr: R) -> String {
     let mut first_line = String::new();
-    rdr.read_line(&mut first_line).expect("Unable to read line");
+    rdr.read_line(&mut first_line).unwrap();
 
     let last_hash = first_line
         .char_indices()
