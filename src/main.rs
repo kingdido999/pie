@@ -10,6 +10,7 @@ use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
+use std::io::SeekFrom;
 use tera::Context;
 
 #[derive(Serialize)]
@@ -28,9 +29,12 @@ fn main() {
     // Generate posts
     for entry in entries {
         let path = entry.unwrap().path();
-        let file = File::open(&path).expect("Unable to open file.");
+        let mut file = File::open(&path).expect("Unable to open file.");
         let buf_reader = BufReader::new(&file);
         let title = extract_title_string(buf_reader);
+
+        // Go back to the beginning of the file for the second reading
+        file.seek(SeekFrom::Start(0)).unwrap();
         let html_buf = convert_markdown_to_html(file);
 
         let post = Post {
