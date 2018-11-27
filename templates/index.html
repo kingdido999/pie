@@ -2,5 +2,10 @@
 {% block content %}
   <h1>黑客馅饼</h1>
   <div class="post-list">
+    {% for post in posts %}
+      <div class="post">
+        {{ post.title }}
+      </div>
+    {% endfor %}
   </div>
 {% endblock content %}
