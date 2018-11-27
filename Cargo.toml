@@ -1,0 +1,9 @@
+[package]
+name = "hacker-pie"
+version = "0.1.0"
+authors = ["kingdido999 <info@desmonding.me>"]
+edition = "2018"
+
+[dependencies]
+pulldown-cmark = "0.2.0"
+tera = "0.11"
