@@ -1,10 +1,9 @@
 {% extends "layouts/base.html" %}
 {% block content %}
-  <h1>黑客馅饼</h1>
   <div class="post-list">
     {% for post in post_list %}
       <div class="post">
-        <a href="/posts/{{ post.file_name }}">{{ post.title }}</a>
+        <a href="{{ post.url }}">{{ post.title }}</a>
       </div>
     {% endfor %}
   </div>
