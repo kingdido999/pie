@@ -46,7 +46,7 @@ fn main() -> Result<()> {
 
                 let mut context = Context::new();
                 context.insert("content", &html_buf);
-                let rendered_html = tera.render("layouts/page.html", &context).unwrap();
+                let rendered_html = tera.render("page.html", &context).unwrap();
 
                 let output_path_str = path
                     .to_str()
@@ -86,16 +86,10 @@ fn main() -> Result<()> {
 
 fn setup_template_engine() -> Tera {
     let mut tera = Tera::default();
-    tera.add_raw_template(
-        "layouts/base.html",
-        include_str!("templates/layouts/base.html"),
-    )
-    .unwrap();
-    tera.add_raw_template(
-        "layouts/page.html",
-        include_str!("templates/layouts/page.html"),
-    )
-    .unwrap();
+    tera.add_raw_template("base.html", include_str!("templates/base.html"))
+        .unwrap();
+    tera.add_raw_template("page.html", include_str!("templates/page.html"))
+        .unwrap();
     tera.add_raw_template("index.html", include_str!("templates/index.html"))
         .unwrap();
     tera.autoescape_on(vec![]);
