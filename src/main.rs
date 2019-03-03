@@ -1,8 +1,9 @@
-#[macro_use]
-extern crate serde_derive;
-
 extern crate glob;
 extern crate serde;
+extern crate chrono;
+
+#[macro_use]
+extern crate serde_derive;
 
 use glob::glob;
 use pulldown_cmark::{html, Parser};
@@ -12,11 +13,13 @@ use std::io::prelude::*;
 use std::io::{BufReader, Result, SeekFrom};
 use std::path::Path;
 use tera::{Context, Tera};
+use chrono::prelude::*;
 
-#[derive(Serialize)]
-struct Post {
+#[derive(Serialize, Eq, Ord, PartialEq, PartialOrd)]
+struct Item {
     url: String,
     title: String,
+    created_at: String,
 }
 
 fn main() -> Result<()> {
@@ -30,7 +33,7 @@ fn main() -> Result<()> {
     }
 
     fs::create_dir(output_dir)?;
-    let mut post_list = vec![];
+    let mut item_list = vec![];
 
     // Generate pages
     for entry in glob(&format!("{}/**/*.md", input_dir_str)).expect("Failed to read glob pattern") {
@@ -44,8 +47,15 @@ fn main() -> Result<()> {
                 file.seek(SeekFrom::Start(0))?;
                 let html_buf = convert_markdown_to_html(file);
 
+                let metadata = fs::metadata(&path)?;
+                let created_at = metadata.created()?;
+		let created_at = DateTime::<Utc>::from(created_at)
+			.format("%Y-%m-%d %H:%M")
+			.to_string();
+
                 let mut context = Context::new();
                 context.insert("content", &html_buf);
+                context.insert("created_at", &created_at);
                 let rendered_html = tera.render("page.html", &context).unwrap();
 
                 let output_path_str = path
@@ -64,33 +74,41 @@ fn main() -> Result<()> {
                 write_buf.write(rendered_html.as_bytes())?;
                 let url = output_path_str.replace(output_dir_str, "");
 
-                let post = Post {
+                let item = Item {
                     title: title,
                     url: url,
+                    created_at: created_at
                 };
-                post_list.push(post);
+                item_list.push(item);
             }
             Err(e) => println!("{:?}", e),
         }
     }
+    
+    item_list.sort_by(|a, b| b.created_at.cmp(&a.created_at));
 
     // Generate home page
     let mut context = Context::new();
-    context.insert("post_list", &post_list);
+    context.insert("item_list", &item_list);
     let rendered_html = tera.render("index.html", &context).unwrap();
     let mut write_buf = File::create(format!("{}/index.html", output_dir_str))?;
     write_buf.write(rendered_html.as_bytes())?;
+
+    // Copy assets
+    let css = include_str!("theme/assets/css/style.css");
+    fs::create_dir_all("dist/assets/css")?;
+    fs::write("dist/assets/css/style.css", css)?;
 
     Ok(())
 }
 
 fn setup_template_engine() -> Tera {
     let mut tera = Tera::default();
-    tera.add_raw_template("base.html", include_str!("templates/base.html"))
+    tera.add_raw_template("base.html", include_str!("theme/base.html"))
         .unwrap();
-    tera.add_raw_template("page.html", include_str!("templates/page.html"))
+    tera.add_raw_template("page.html", include_str!("theme/page.html"))
         .unwrap();
-    tera.add_raw_template("index.html", include_str!("templates/index.html"))
+    tera.add_raw_template("index.html", include_str!("theme/index.html"))
         .unwrap();
     tera.autoescape_on(vec![]);
     tera

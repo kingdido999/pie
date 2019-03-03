@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="item-list">
+    {% for item in item_list %}
+      <ul class="item">
+        <li><a href="{{ item.url }}">{{ item.title }}</a></li>
+      </ul>
+    {% endfor %}
+  </div>
+{% endblock content %}
