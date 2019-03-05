@@ -20,6 +20,7 @@ struct Item {
     url: String,
     title: String,
     created_at: String,
+    updated_at: String,
 }
 
 fn main() -> Result<()> {
@@ -49,13 +50,18 @@ fn main() -> Result<()> {
 
                 let metadata = fs::metadata(&path)?;
                 let created_at = metadata.created()?;
+                let updated_at = metadata.modified()?;
 		let created_at = DateTime::<Utc>::from(created_at)
-			.format("%Y-%m-%d %H:%M")
-			.to_string();
+                    .format("%Y-%m-%d %H:%M")
+                    .to_string();
+                let updated_at = DateTime::<Utc>::from(updated_at)
+                    .format("%Y-%m-%d %H:%M")
+                    .to_string();
 
                 let mut context = Context::new();
                 context.insert("content", &html_buf);
                 context.insert("created_at", &created_at);
+                context.insert("updated_at", &updated_at);
                 let rendered_html = tera.render("page.html", &context).unwrap();
 
                 let output_path_str = path
@@ -77,8 +83,10 @@ fn main() -> Result<()> {
                 let item = Item {
                     title: title,
                     url: url,
-                    created_at: created_at
+                    created_at: created_at,
+                    updated_at: updated_at,
                 };
+
                 item_list.push(item);
             }
             Err(e) => println!("{:?}", e),
